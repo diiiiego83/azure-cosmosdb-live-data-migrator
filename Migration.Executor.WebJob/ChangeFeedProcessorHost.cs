@@ -312,7 +312,7 @@ namespace Migration.Executor.WebJob
             Boolean isNestedAttribute,
             string targetPartitionKey)
         {
-
+ 
             string resultKey = "";
             string key = doc.GetPropertyValue<string>("key");
             if (key.EndsWith("tenants"))
@@ -332,21 +332,20 @@ namespace Migration.Executor.WebJob
             }
             else
             {
-
+                
                 string tenant = doc.GetPropertyValue<string>("data/tenant");
                 string subproject = doc.GetPropertyValue<string>("data/subproject");
                 string path = doc.GetPropertyValue<string>("data/path");
                 string name = doc.GetPropertyValue<string>("data/name");
+                
+                byte[] sourceBytes = Encoding.UTF8.GetBytes(path + name);
+                byte[] hashBytes;
+                SHA512 shaM = new SHA512Managed();
+                hashBytes = shaM.ComputeHash(sourceBytes);
+                string hash = BitConverter.ToString(hashBytes).Replace("-", String.Empty);
+                hash = hash.ToLower();
 
-                using (SHA512 sha512Hash = SHA512.Create())
-                {
-                    byte[] sourceBytes = Encoding.UTF8.GetBytes(path + name);
-                    byte[] hashBytes = sha512Hash.ComputeHash(sourceBytes);
-                    string hash = BitConverter.ToString(hashBytes).Replace("-", String.Empty);
-                    hash = hash.ToLower();
-                }
-
-                resultKey = 'ds-' + tenant + '-' + subproject + '-' + hash
+                resultKey = "ds-" + tenant + "-" + subproject + "-" + hash;
 
             }
 
