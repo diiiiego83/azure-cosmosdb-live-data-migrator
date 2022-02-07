@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Globalization;
 using System.IO;
 using System.Runtime.Serialization.Json;
@@ -311,30 +312,42 @@ namespace Migration.Executor.WebJob
             Boolean isNestedAttribute,
             string targetPartitionKey)
         {
-            StringBuilder syntheticKey = new StringBuilder();
-            string[] sourceAttributeArray = sourcePartitionKeys.Split(',');
-            int arraylength = sourceAttributeArray.Length;
-            int count = 1;
-            foreach (string rawattribute in sourceAttributeArray)
+ 
+            string resultKey = "";
+            string key = doc.GetPropertyValue<string>("key");
+            if (key.EndsWith("tenants"))
             {
-                string attribute = rawattribute.Trim();
-                if (count == arraylength)
-                {
-                    string val = isNestedAttribute == true ?
-                        GetNestedValue(doc, attribute) :
-                        doc.GetPropertyValue<string>(attribute);
-                    syntheticKey.Append(val);
-                }
-                else
-                {
-                    string val = isNestedAttribute == true ?
-                        GetNestedValue(doc, attribute) + "-" :
-                        doc.GetPropertyValue<string>(attribute) + "-";
-                    syntheticKey.Append(val);
-                }
-                count++;
+                string val = doc.GetPropertyValue<string>("id");
+                resultKey = "tn-" + val;
             }
-            doc.SetPropertyValue(targetPartitionKey, syntheticKey.ToString());
+            else if (key.EndsWith("subprojects"))
+            {
+                string val = doc.GetPropertyValue<string>("id");
+                resultKey = "sp-" + val;
+            }
+            else if (key.EndsWith("apps"))
+            {
+                string val = doc.GetPropertyValue<string>("id");
+                resultKey = "ap-" + val;
+            }
+            else
+            {
+                
+                string tenant = doc.GetPropertyValue<string>("data/tenant");
+                string subproject = doc.GetPropertyValue<string>("data/subproject");
+                string path = doc.GetPropertyValue<string>("data/path");
+                string name = doc.GetPropertyValue<string>("data/name");
+                
+                byte[] sourceBytes = Encoding.UTF8.GetBytes(path + '/' + name);
+                byte[] hashBytes = sha512Hash.ComputeHash(sourceBytes);
+                string hash = BitConverter.ToString(hashBytes).Replace("-", String.Empty);
+                hash = hash.ToLower();
+
+                resultKey = 'ds-' + tenant + '-' + subproject + '-' + hash
+
+            }
+
+            doc.SetPropertyValue(targetPartitionKey, resultKey);
 
             return doc;
         }
