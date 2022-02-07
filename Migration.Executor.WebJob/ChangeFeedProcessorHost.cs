@@ -333,10 +333,10 @@ namespace Migration.Executor.WebJob
             else
             {
 
-                string tenant = doc.GetPropertyValue<string>("data/tenant");
-                string subproject = doc.GetPropertyValue<string>("data/subproject");
-                string path = doc.GetPropertyValue<string>("data/path");
-                string name = doc.GetPropertyValue<string>("data/name");
+                string tenant = GetNestedValue(doc, "data/tenant");
+                string subproject = GetNestedValue(doc, "data/subproject");
+                string path = GetNestedValue(doc, "data/path");
+                string name = GetNestedValue(doc, "data/name");
 
                 using (SHA512 sha512Hash = SHA512.Create())
                 {
@@ -344,10 +344,10 @@ namespace Migration.Executor.WebJob
                     byte[] hashBytes = sha512Hash.ComputeHash(sourceBytes);
                     string hash = BitConverter.ToString(hashBytes).Replace("-", String.Empty);
                     hash = hash.ToLower();
+
+                resultKey = 'ds-' + tenant + '-' + subproject + '-' + hash;
+
                 }
-
-                resultKey = 'ds-' + tenant + '-' + subproject + '-' + hash
-
             }
 
             doc.SetPropertyValue(targetPartitionKey, resultKey);
