@@ -345,7 +345,7 @@ namespace Migration.Executor.WebJob
                     string hash = BitConverter.ToString(hashBytes).Replace("-", String.Empty);
                     hash = hash.ToLower();
 
-                resultKey = 'ds-' + tenant + '-' + subproject + '-' + hash;
+                    resultKey = "ds-" + tenant + "-" + subproject + "-" + hash;
 
                 }
             }
